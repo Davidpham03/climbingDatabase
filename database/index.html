@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <script src="https://www.gstatic.com/firebasejs/10.4.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore-compat.js"></script>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="shortcut icon" href="#">
+    <title>Climbing Database</title>
+</head>
+<body>
+    <button id="wall-button"> Create wall </button>
+    <br></br>
+    <input type="text" id="input-field-x" placeholder="x">
+    <input type="text" id="input-field-y" placeholder="y">
+    <input type="text" id="input-field-id" placeholder="id">
+    <button id="add-button"> Confirm </button>
+    <br></br>
+
+    <input type="text" id="add-route-node" placeholder="add node">
+    <button id="add-route-button"> Add node </button>
+    <input type="text" id="route-name" placeholder="add route name">
+    <input type="text" id="difficulty" placeholder="add difficulty">
+
+    
+    <button id="save-route-button"> Save route </button>
+
+    <br></br>
+
+    <input type="text" id="search-node-id" placeholder="id">
+    <button id="search-button"> Search </button>
+    <br></br>
+    <p id="x-val"></p>
+    <p id="y-val"></p>
+
+    <!--<canvas id="myCanvas" width="750" height="950"></canvas> -->
+    <img src="wall.jpg" width = "701pt" height = "946.66pt">
+    <div id='test1'>
+        <object style="pointer-events: none;" id="svg-object" data="nodes1.svg" type="image/svg+xml"></object>
+    </div>
+
+    <script type="text/javascript" src="script.js"></script> 
+</body>
+
+
+</html>
