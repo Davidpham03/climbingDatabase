@@ -4,6 +4,8 @@
 
     <script src="https://www.gstatic.com/firebasejs/10.4.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.4.0/firebase-storage-compat.js"></script>
+
 
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -32,6 +34,9 @@
 
     <input type="text" id="search-node-id" placeholder="id">
     <button id="search-button"> Search </button>
+    <button id="start-route-button"> Start route </button>
+    <button id="create-route-button"> Save route </button>
+
     <br></br>
     <p id="x-val"></p>
     <p id="y-val"></p>
@@ -39,7 +44,7 @@
     <!--<canvas id="myCanvas" width="750" height="950"></canvas> -->
     <img src="wall.jpg" width = "701pt" height = "946.66pt">
     <div id='test1'>
-        <object style="pointer-events: none;" id="svg-object" data="nodes1.svg" type="image/svg+xml"></object>
+        <object style="pointer-events: none;" id="svg-object" data ="nodes1.svg" type="image/svg+xml"></object>
     </div>
 
     <script type="text/javascript" src="script.js"></script> 

@@ -12,6 +12,61 @@
     firebase.initializeApp(firebaseConfig);
     const database = firebase.firestore();
 
+
+    const storage = firebase.storage();
+    var svgRef = storage.ref('nodes1.svg');
+   
+    //fetching svg file from firebase
+
+    svgRef.getDownloadURL()
+    .then((url) => {
+        console.log("url: " + url);
+        console.log("ref: " + svgRef);
+        
+        // This can be downloaded directly:
+        var xhr = new XMLHttpRequest();
+        xhr.setRequestHeader('Access-Control-Allow-Origin', '*');
+        xhr.responseType = 'blob';
+        xhr.onload = (event) => {
+        var blob = xhr.response;
+        console.log("blob: " + blob);
+
+        };
+        xhr.open('GET', url);
+        xhr.send();
+
+        console.log("blob: " + blob);
+
+        var svgO = document.getElementById("svg-object");
+        svgO.setAttribute("data", url);
+    })
+    .catch((error) => {
+    // A full list of error codes is available at
+    // https://firebase.google.com/docs/storage/web/handle-errors
+    switch (error.code) {
+        case 'storage/object-not-found':
+        // File doesn't exist
+        break;
+        case 'storage/unauthorized':
+        // User doesn't have permission to access the object
+        break;
+        case 'storage/canceled':
+        // User canceled the upload
+        break;
+
+        // ...
+
+        case 'storage/unknown':
+        // Unknown error occurred, inspect the server response
+        break;
+    }
+    });
+
+
+
+
+
+
     class Wall{
         constructor (name){
             this.name = name;
@@ -90,7 +145,10 @@
     const routeNodeName = document.getElementById('add-route-node');
     const routeName = document.getElementById('route-name');
     const routeDiff = document.getElementById('difficulty');
-
+    const startRouteButton = document.getElementById('start-route-button');
+    var currRouteMade = false; 
+    const createRouteButton = document.getElementById('create-route-button');
+   
     
     const displayX = document.getElementById('x-val');
     const displayY = document.getElementById('y-val');
@@ -149,24 +207,100 @@
         convertToPt(e.pageX-xCoord, e.pageY-yCoord);
      })
 
+     var allNodes = [];
+
+    buttonInput.addEventListener("click", function(){
+
+        console.log("hello");
+        var nodesRef = database.collection("wall").doc("wall1").collection("nodes").withConverter(nodeConverter);
+        //var query = nodesRef.where("id", "==", searchName.value);
+      
+        nodesRef.get().then((querySnapshot) => {
+            querySnapshot.forEach((doc) => {
+               // console.log("data:" + doc.data().x);
+                var n = doc.data();
+                allNodes.push(n);
+            });
+        })
+       
+    })
+
+
+
     //gets the svg file
     var svg = document.getElementById('svg-object');
-    console.log(svg);
-    //const svgS = document.querySelector('svg-object');
-    
+    console.log("svg: " + svg);
+
+    // var svgDoc = svg.contentDocument;
+    // console.log(svgDoc);
+
     function convertToPt(x,y){
         newX = x*(3/4);
         newY = y*(3/4);
         console.log(newX);
         console.log(newY);
+        selectNodes(newX, newY);
     }
-    
-    
+    startRouteButton.addEventListener("click", function(){
+        currRouteMade = true;
+    })
+
+    function selectNodes(xClick,yClick){
+        var svgDoc = svg.contentDocument;
+        if (currRouteMade){
+            for (var i = 0; i< allNodes.length; i++){
+                var maxX = 0;
+                var maxY = 0;
+                for(var j = 0; j < allNodes[i].coordsX.length; j++){
+                    if(allNodes[i].coordsX[j] > maxX) maxX = allNodes[i].coordsX[j] > maxX
+                }
+                for(var k = 0; k < allNodes[i].coordsY.length; k++){
+                    if(allNodes[i].coordsY[k] > maxY) maxY = allNodes[i].coordsY[k] > maxY
+                }
+
+                // console.log("node x: " + allNodes[i].x);
+                // console.log("node y: " + allNodes[i].y);
+                // console.log("node id: " + allNodes[i].id);
+                if ((allNodes[i].x < xClick) &&
+                (allNodes[i].x + maxX > xClick) &&
+                (allNodes[i].y < yClick) && 
+                (allNodes[i].y + maxY > yClick)){
+                    var shape = svgDoc.getElementById(`shape${allNodes[i].id}`);
+                    shape.setAttribute("stroke" , "ff0000");
+                    break;
+                }
+            }
+        }
+    }
+//     var svgDoc;
+//     svg.addEventListener("load",function() {
+      
+//      // alert("SVG contentDocument Loaded!");
+//  }, false);
+
+    console.log(svg);
+
+    var collectionRef = database.collection("wall");
+
     //parse svg elements by their ids and stores the coordinates in firebase
     buttonInput.addEventListener("click", function(){
-        var svgDoc = svg.contentDocument;
+        collectionRef.get()
+            .then(function(querySnapshot) {
+                if (querySnapshot.size = 0) {
+                    console.log(querySnapshot.size);
+                    addNodes();
+                }
+            })
+            .catch(function(error) {
+                console.error("Error checking collection:", error);
+            });
+    })
+
+    function addNodes(){
+        
         count = 0;
         
+    
         while (svgDoc.getElementById(`shape${count}`) != null){
        
             //var item0 = shape0.pathSegList[0];
@@ -214,9 +348,7 @@
 
             count++;
         }
-
-        var allNodes = [];
-    })
+    }
 
 
   
