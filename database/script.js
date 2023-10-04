@@ -252,10 +252,10 @@
                 var maxX = 0;
                 var maxY = 0;
                 for(var j = 0; j < allNodes[i].coordsX.length; j++){
-                    if(allNodes[i].coordsX[j] > maxX) maxX = allNodes[i].coordsX[j] > maxX
+                    if(allNodes[i].coordsX[j] > maxX) maxX = allNodes[i].coordsX[j] > maxX;
                 }
                 for(var k = 0; k < allNodes[i].coordsY.length; k++){
-                    if(allNodes[i].coordsY[k] > maxY) maxY = allNodes[i].coordsY[k] > maxY
+                    if(allNodes[i].coordsY[k] > maxY) maxY = allNodes[i].coordsY[k] > maxY;
                 }
 
                 // console.log("node x: " + allNodes[i].x);
