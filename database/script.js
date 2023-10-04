@@ -65,8 +65,6 @@
 
 
 
-
-
     class Wall{
         constructor (name){
             this.name = name;
@@ -90,10 +88,6 @@
             // this.end = end
             this.difficulty = difficulty
             this.routeNodes = routeNodes
-        }
-
-        add_node(node){
-            this.routes.push(node);
         }
     }
     
@@ -130,165 +124,42 @@
         };
 
     const buttonInput = document.getElementById('add-button');
-    const wallButton = document.getElementById('wall-button');
-
-    
-    const nodeXVal = document.getElementById('input-field-x');
-    const nodeYVal = document.getElementById('input-field-y');
-    const nodeIdVal = document.getElementById('input-field-id');
     
     const searchButton = document.getElementById('search-button');
     const searchName = document.getElementById('search-node-id');
 
-    const addNodeButton = document.getElementById('add-route-button');
-    const saveRouteButton = document.getElementById('save-route-button');
-    const routeNodeName = document.getElementById('add-route-node');
     const routeName = document.getElementById('route-name');
     const routeDiff = document.getElementById('difficulty');
     const startRouteButton = document.getElementById('start-route-button');
     var currRouteMade = false; 
     const createRouteButton = document.getElementById('create-route-button');
    
-    
     const displayX = document.getElementById('x-val');
     const displayY = document.getElementById('y-val');
     
-
-   //add node to database
-    buttonInput.addEventListener('click', function() {
-  
-        /*const newNode = new Node(nodeXVal.value, nodeYVal.value, nodeIdVal.value);
-        database.collection("wall").doc("wall1").collection("nodes").withConverter(nodeConverter).add(newNode);
-        nodeXVal.value = "";
-        nodeYVal.value = "";
-        nodeIdVal.value = "";*/
-
-  })
-  
-    //outputs the x and y coords of a node given its name
-    searchButton.addEventListener('click', function() {
-
-        var nodesRef = database.collection("wall").doc("wall1").collection("nodes");
-        var query = nodesRef.where("id", "==", searchName.value);
-
-        query.get().then((querySnapshot) => {
-            querySnapshot.forEach((doc) => {
-                console.log(doc.id, " => ", doc.data());
-                displayX.innerHTML = "x:" + doc.data().x;
-                displayY.innerHTML = "y:" + doc.data().y;
-            });
-        })
-        searchName.value = "";
+    window.addEventListener("load", function(){
+            var nodesRef = database.collection("wall").doc("wall1").collection("nodes").withConverter(nodeConverter);
+            nodesRef.get().then((querySnapshot) => {
+                querySnapshot.forEach((doc) => {
+                    var n = doc.data();
+                    allNodes.push(n);
+                });
+            })
+        
     })
 
-    var tempRoute = [];
-
-    //creates a new route, allowing the user to input the nodes in the route
-    addNodeButton.addEventListener('click', function() {
-        tempRoute.push(routeNodeName.value);
-        routeNodeName.value = "";
-    })
-
-    //saves the current route and stores it into the database
-    saveRouteButton.addEventListener('click', function() {
-        var newRoute = new Route(routeName.value, routeDiff.value, tempRoute);
-        database.collection("wall").doc("wall1").collection("routeNodes").withConverter(routeConverter).add(newRoute);
-        tempRoute = [];
-        routeDiff.value = "";
-        routeName.value = "";
-    })
-
-    var xCoord = 8;
-    var yCoord = 183;
-
-    document.addEventListener('click', function(e) {
-        console.log(document.elementFromPoint(e.pageX, e.pageY)); 
-        console.log("clicked x: " + e.pageX + "clicked y: " + e.pageY);
-        convertToPt(e.pageX-xCoord, e.pageY-yCoord);
-     })
-
-     var allNodes = [];
-
-    buttonInput.addEventListener("click", function(){
-
-        console.log("hello");
-        var nodesRef = database.collection("wall").doc("wall1").collection("nodes").withConverter(nodeConverter);
-        //var query = nodesRef.where("id", "==", searchName.value);
-      
-        nodesRef.get().then((querySnapshot) => {
-            querySnapshot.forEach((doc) => {
-               // console.log("data:" + doc.data().x);
-                var n = doc.data();
-                allNodes.push(n);
-            });
-        })
-       
-    })
-
-
-
-    //gets the svg file
-    var svg = document.getElementById('svg-object');
-    console.log("svg: " + svg);
-
-    // var svgDoc = svg.contentDocument;
-    // console.log(svgDoc);
-
-    function convertToPt(x,y){
-        newX = x*(3/4);
-        newY = y*(3/4);
-        console.log(newX);
-        console.log(newY);
-        selectNodes(newX, newY);
-    }
-    startRouteButton.addEventListener("click", function(){
-        currRouteMade = true;
-    })
-
-    function selectNodes(xClick,yClick){
-        var svgDoc = svg.contentDocument;
-        if (currRouteMade){
-            for (var i = 0; i< allNodes.length; i++){
-                var maxX = 0;
-                var maxY = 0;
-                for(var j = 0; j < allNodes[i].coordsX.length; j++){
-                    if(allNodes[i].coordsX[j] > maxX) maxX = allNodes[i].coordsX[j];
-                }
-                for(var k = 0; k < allNodes[i].coordsY.length; k++){
-                    if(allNodes[i].coordsY[k] > maxY) maxY = allNodes[i].coordsY[k];
-                }
-
-                // console.log("node x: " + allNodes[i].x);
-                // console.log("node y: " + allNodes[i].y);
-                // console.log("node id: " + allNodes[i].id);
-                if ((allNodes[i].x < xClick) &&
-                (allNodes[i].x + maxX > xClick) &&
-                (allNodes[i].y < yClick) && 
-                (allNodes[i].y + maxY > yClick)){
-                    var shape = svgDoc.getElementById(`shape${allNodes[i].id}`);
-                    shape.setAttribute("stroke" , "ff0000");
-                    break;
-                }
-            }
-        }
-    }
-//     var svgDoc;
-//     svg.addEventListener("load",function() {
-      
-//      // alert("SVG contentDocument Loaded!");
-//  }, false);
-
-    console.log(svg);
-
-    var collectionRef = database.collection("wall");
-
-    //parse svg elements by their ids and stores the coordinates in firebase
-    buttonInput.addEventListener("click", function(){
-        collectionRef.get()
-            .then(function(querySnapshot) {
-                if (querySnapshot.size = 0) {
-                    console.log(querySnapshot.size);
+    window.addEventListener("load", function(){
+        var collectionRef = database.collection("wall").doc("wall1").collection("nodes");
+        var query = collectionRef.where("id", "==", 0);
+        query.get()
+            .then((querySnapshot) => {
+                console.log(querySnapshot);
+                if (querySnapshot.empty) {
+                    console.log("empty");
                     addNodes();
+                }
+                else{
+                    console.log("not empty");
                 }
             })
             .catch(function(error) {
@@ -296,17 +167,18 @@
             });
     })
 
+    var allNodes = [];
+
+    //parse svg elements by their ids and stores the coordinates in firebase
     function addNodes(){
-        
+        var svgDoc = svg.contentDocument;
+
         count = 0;
         while (svgDoc.getElementById(`shape${count}`) != null){
        
-            //var item0 = shape0.pathSegList[0];
-            //console.log("x:", shape0.);
             console.log(`shape${count}`);
             var shape1 = svgDoc.getElementById(`shape${count}`);
-            //var item1 = shape1.pathSegList[0];
-            //console.log("x:" + item1.x + "y:" + item1.y);
+           
 
             console.log("d: ", shape1.getAttribute("d"));
             
@@ -347,6 +219,119 @@
             count++;
         }
     }
+
+    function changeColour(id, colour){
+        var svgDoc = svg.contentDocument;
+        var shape = svgDoc.getElementById(`shape${id}`);
+        shape.setAttribute("stroke", colour);
+    }
+
+
+    var xCoord = 8;
+    var yCoord = 276;
+
+    document.addEventListener('click', function(e) {
+        console.log(document.elementFromPoint(e.pageX, e.pageY)); 
+        console.log("clicked x: " + e.pageX + "clicked y: " + e.pageY);
+        convertToPt(e.pageX-xCoord, e.pageY-yCoord);
+     })
+
+    
+
+    //gets the svg file
+    var svg = document.getElementById('svg-object');
+    console.log("svg: " + svg);
+
+
+    function convertToPt(x,y){
+        newX = x*(3/4);
+        newY = y*(3/4);
+        console.log(newX);
+        console.log(newY);
+        selectNodes(newX, newY);
+    }
+    
+    var newRoute = [];
+    
+    startRouteButton.addEventListener("click", function(){
+        currRouteMade = true;        
+        newRoute = [];
+        for (var i =0; i < allNodes.length; i++){
+            changeColour(allNodes[i].id, "#000000");
+        }
+    })
+
+    function selectNodes(xClick,yClick){
+        var svgDoc = svg.contentDocument;
+        if (currRouteMade){
+            for (var i = 0; i< allNodes.length; i++){
+                var maxX = 0;
+                var maxY = 0;
+                for(var j = 0; j < allNodes[i].coordsX.length; j++){
+                    if(allNodes[i].coordsX[j] > maxX) maxX = allNodes[i].coordsX[j];
+                }
+                for(var k = 0; k < allNodes[i].coordsY.length; k++){
+                    if(allNodes[i].coordsY[k] > maxY) maxY = allNodes[i].coordsY[k];
+                }
+
+                if ((allNodes[i].x < xClick) &&
+                (allNodes[i].x + maxX > xClick) &&
+                (allNodes[i].y < yClick) && 
+                (allNodes[i].y + maxY > yClick)){
+                    var shape = svgDoc.getElementById(`shape${allNodes[i].id}`);
+                    if (shape.getAttribute("stroke") == "#000000"){
+                        shape.setAttribute("stroke" , "red");
+                        newRoute.push(allNodes[i].id);
+                    }
+                    else{
+                        shape.setAttribute("stroke" , "#000000");
+                        newRoute.splice(newRoute.indexOf(allNodes[i].id, 1));
+                    }
+                    break;
+                }
+            }
+        }
+    }
+
+    createRouteButton.addEventListener("click", function(){
+        if(newRoute.length > 0)
+        {
+            var createdRoute = new Route(routeName.value, routeDiff.value, newRoute);
+            database.collection("wall").doc("wall1").collection("routeNodes").withConverter(routeConverter).add(createdRoute);
+            for (var i =0; i < newRoute.length; i++){
+                changeColour(newRoute[i] , "#000000");
+            }
+        }
+        routeName.value = "";
+        routeDiff.value = "";  
+        currRouteMade = false;
+    })
+        
+    
+    //displays route given name
+    searchButton.addEventListener('click', function() {
+
+        for (var i =0; i < allNodes.length; i++){
+            changeColour(allNodes[i].id, "#000000");
+        }
+
+        var routesRef = database.collection("wall").doc("wall1").collection("routeNodes");
+        var query = routesRef.where("name", "==", searchName.value);
+        var nodes;
+        query.get().then((querySnapshot) => {
+            querySnapshot.forEach((doc) => {
+                var route = doc.data();
+                nodes = route.routeNodes;
+                console.log("nodes:"+nodes.length);
+                
+                for(var i = 0; i < nodes.length; i++) {
+                    changeColour(nodes[i], "red");
+                }
+            });
+        });
+        
+        searchName.value = "";
+    })
 
 
   
