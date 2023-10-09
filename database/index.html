@@ -5,7 +5,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.4.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.4.0/firebase-storage-compat.js"></script>
-
+    <script src="https://www.gstatic.com/firebasejs/10.4.0/firebase-auth-compat.js"></script>
 
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -18,18 +18,23 @@
     <!--<button id="add-button"> Save svg to database </button>-->
     <h1> Boulder Builder </h1>
 
+    <button id="sign-in-button"> Sign In </button>
+
     <h3> Add a route: </h3>
+
     <button id="start-route-button"> Start route </button>
     <input type="text" id="route-name" placeholder="add route name">
     <input type="text" id="difficulty" placeholder="add difficulty">
     <button id="create-route-button"> Save route </button>
+    <p id="word-box"> Route not started...</p>
     
-    <br></br>
-
     <h3> Search for a route:</h3>
     <input type="text" id="search-node-id" placeholder="name">
     <button id="search-button"> Search </button>
     
+    <p id="route-name-text"></p>
+    <p id="route-author"></p>
+
    
 
     <br></br>
@@ -37,7 +42,7 @@
     <p id="y-val"></p>
 
     <!--<canvas id="myCanvas" width="750" height="950"></canvas> -->
-    <img src="wall.jpg" width = "701pt" height = "946.66pt">
+    <img src="wall.jpg" id="image" width = "701pt" height = "946.66pt">
     <div id='test1'>
         <object style="pointer-events: none;" id="svg-object" data ="nodes1.svg" type="image/svg+xml"></object>
     </div>

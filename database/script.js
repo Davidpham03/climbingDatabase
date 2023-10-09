@@ -12,11 +12,15 @@
     firebase.initializeApp(firebaseConfig);
     const database = firebase.firestore();
 
-
+    const auth = firebase.auth();
+    var provider = new firebase.auth.GoogleAuthProvider();
+    
     const storage = firebase.storage();
     var svgRef = storage.ref('nodes1.svg');
    
-    //fetching svg file from firebase
+   
+
+    //fetching svg file from firebase - currently not functional
 
     svgRef.getDownloadURL()
     .then((url) => {
@@ -82,12 +86,13 @@
     }
 
     class Route{
-        constructor(name , difficulty, routeNodes){
+        constructor(name , difficulty, routeNodes, author){
             this.name = name
             // this.start = start
             // this.end = end
             this.difficulty = difficulty
             this.routeNodes = routeNodes
+            this.author = author
         }
     }
     
@@ -114,16 +119,20 @@
                 return {
                     name: route.name,
                     difficulty: route.difficulty,
-                    routeNodes: route.routeNodes
+                    routeNodes: route.routeNodes,
+                    author:route.author
                     };
             },
             fromFirestore: function(snapshot, options){
                 const data = snapshot.data(options);
-                return new Route(data.name, data.difficulty, data.routeNodes);
+                return new Route(data.name, data.difficulty, data.routeNodes, data.author);
             }
         };
 
     const buttonInput = document.getElementById('add-button');
+
+    const signInButton = document.getElementById('sign-in-button');
+
     
     const searchButton = document.getElementById('search-button');
     const searchName = document.getElementById('search-node-id');
@@ -136,15 +145,22 @@
    
     const displayX = document.getElementById('x-val');
     const displayY = document.getElementById('y-val');
+
+    const displaySearchText = document.getElementById("word-box");
+    
+    const routeNameText = document.getElementById("route-name-text");
+    const routeAuthorText = document.getElementById("route-author");
+
     
     window.addEventListener("load", function(){
-            var nodesRef = database.collection("wall").doc("wall1").collection("nodes").withConverter(nodeConverter);
-            nodesRef.get().then((querySnapshot) => {
-                querySnapshot.forEach((doc) => {
-                    var n = doc.data();
-                    allNodes.push(n);
-                });
-            })
+        getImgCoord();
+        var nodesRef = database.collection("wall").doc("wall1").collection("nodes").withConverter(nodeConverter);
+        nodesRef.get().then((querySnapshot) => {
+            querySnapshot.forEach((doc) => {
+                var n = doc.data();
+                allNodes.push(n);
+            });
+        })
         
     })
 
@@ -166,8 +182,95 @@
                 console.error("Error checking collection:", error);
             });
     })
+   
+    
+    var svg = document.getElementById('svg-object');
+    console.log("svg: " + svg);
+    var xCoord;
+    var yCoord;
+
+    function getImgCoord(){ 
+        wallPic = document.getElementById("image");
+        yCoord = 0;
+        xCoord = 0;
+
+       while( wallPic != null ) { 
+            yCoord += wallPic.offsetTop;
+            xCoord += wallPic.offsetLeft;
+            wallPic = wallPic.offsetParent;
+        }
+
+        console.log("x: "+xCoord +"\ny: "+yCoord);
+        svg.style.top = yCoord+"px";
+        svg.style.left = xCoord+"px";
+    }
 
     var allNodes = [];
+
+    //Authentication and user events.
+    signInButton.addEventListener("click", function(){
+        firebase.auth()
+            .signInWithRedirect(provider)
+            .then((result) => {
+            /** @type {firebase.auth.OAuthCredential} */
+            var credential = result.credential;
+
+            // This gives you a Google Access Token. You can use it to access the Google API.
+            var token = credential.accessToken;
+            // The signed-in user info.
+            var user = result.user;
+            console.log("credential:"+credential);
+
+            console.log("user:"+user.displayName);
+            // IdP data available in result.additionalUserInfo.profile.
+            // ...
+            }).catch((error) => {
+            // Handle Errors here.
+            var errorCode = error.code;
+            var errorMessage = error.message;
+            // The email of the user's account used.
+            var email = error.email;
+            // The firebase.auth.AuthCredential type that was used.
+            var credential = error.credential;
+            // ...
+        });
+
+    })
+    //called when user state changes
+    firebase.auth().onAuthStateChanged((user) => {
+        if (user) {
+            const displayName = user.displayName;
+            const email = user.email;
+            const photoURL = user.photoURL;
+            const emailVerified = user.emailVerified;
+            console.log("YOYOYO"+displayName);
+            signInButton.innerHTML = displayName;
+
+          // User is signed in, see docs for a list of available properties
+          // https://firebase.google.com/docs/reference/js/v8/firebase.User
+          var uid = user.uid;
+          // ...
+        } else {
+          // User is signed out
+          // ...
+        }
+      });
+
+    /*const user = firebase.auth().currentUser;
+    if (user !== null) {
+    // The user object has basic properties such as display name, email, etc.
+        const displayName = user.displayName;
+        const email = user.email;
+        const photoURL = user.photoURL;
+        const emailVerified = user.emailVerified;
+
+        
+        // The user's ID, unique to the Firebase project. Do NOT use
+        // this value to authenticate with your backend server, if
+        // you have one. Use User.getIdToken() instead.
+        const uid = user.uid;
+    }*/
+
 
     //parse svg elements by their ids and stores the coordinates in firebase
     function addNodes(){
@@ -227,8 +330,8 @@
     }
 
 
-    var xCoord = 8;
-    var yCoord = 276;
+    // var xCoord = 8;
+    // var yCoord = 350;
 
     document.addEventListener('click', function(e) {
         console.log(document.elementFromPoint(e.pageX, e.pageY)); 
@@ -239,9 +342,7 @@
     
 
     //gets the svg file
-    var svg = document.getElementById('svg-object');
-    console.log("svg: " + svg);
-
+    
 
     function convertToPt(x,y){
         newX = x*(3/4);
@@ -256,6 +357,7 @@
     startRouteButton.addEventListener("click", function(){
         currRouteMade = true;        
         newRoute = [];
+        displaySearchText.innerHTML = "Creating route...";
         for (var i =0; i < allNodes.length; i++){
             changeColour(allNodes[i].id, "#000000");
         }
@@ -296,20 +398,38 @@
     createRouteButton.addEventListener("click", function(){
         if(newRoute.length > 0)
         {
-            var createdRoute = new Route(routeName.value, routeDiff.value, newRoute);
-            database.collection("wall").doc("wall1").collection("routeNodes").withConverter(routeConverter).add(createdRoute);
-            for (var i =0; i < newRoute.length; i++){
-                changeColour(newRoute[i] , "#000000");
-            }
+            var routesRef = database.collection("wall").doc("wall1").collection("routeNodes");
+            var query = routesRef.where("name", "==", routeName.value);
+            var nodes;
+            query.get().then((querySnapshot) => {
+                if (!querySnapshot.empty){
+                    console.log(searchName.value);
+                    displaySearchText.innerHTML = routeName.value + " already exists. Try another name.";
+                    routeName.value = "";
+                }
+                else{
+                    var routeAuthor = "Guest";
+                    const user = firebase.auth().currentUser;
+                    if(user!=null) routeAuthor = user.displayName;
+                    var createdRoute = new Route(routeName.value, routeDiff.value, newRoute, routeAuthor);
+                    database.collection("wall").doc("wall1").collection("routeNodes").withConverter(routeConverter).add(createdRoute);
+                    displaySearchText.innerHTML = routeName.value + " successfully added.";
+                    for (var i =0; i < newRoute.length; i++){
+                        changeColour(newRoute[i] , "#000000");
+                    }
+                    routeName.value = "";
+                    routeDiff.value = "";  
+                    currRouteMade = false;
+                }
+            })
         }
-        routeName.value = "";
-        routeDiff.value = "";  
-        currRouteMade = false;
     })
         
     
     //displays route given name
     searchButton.addEventListener('click', function() {
+        routeNameText.innerHTML = "";
+        routeAuthorText.innerHTML = "";
 
         for (var i =0; i < allNodes.length; i++){
             changeColour(allNodes[i].id, "#000000");
@@ -326,11 +446,15 @@
                 
                 for(var i = 0; i < nodes.length; i++) {
                     changeColour(nodes[i], "red");
-                }
+                } 
+                searchName.value = "";
+
+                routeNameText.innerHTML = "Route name: "+ route.name;
+                
+                routeAuthorText.innerHTML = "Created by: " + route.author;
+                getImgCoord(); 
             });
-        });
-        
-        searchName.value = "";
+        });  
     })
 
 
