@@ -151,7 +151,13 @@
     const routeNameText = document.getElementById("route-name-text");
     const routeAuthorText = document.getElementById("route-author");
 
-    
+    const searchDiffButton = document.getElementById("search-diff-button");
+    const searchRouteDiff = document.getElementById("search-route-diff");
+    const nextDiffButton = document.getElementById("next-route-button");
+    const prevDiffButton = document.getElementById("previous-route-button");
+    const currRouteText = document.getElementById("curr-route-text");
+    const resetPageButton = document.getElementById("reset-button");
+
     window.addEventListener("load", function(){
         getImgCoord();
         var nodesRef = database.collection("wall").doc("wall1").collection("nodes").withConverter(nodeConverter);
@@ -206,39 +212,56 @@
     }
 
     var allNodes = [];
-
+    var signedIn = false;
     //Authentication and user events.
     signInButton.addEventListener("click", function(){
-        firebase.auth()
-            .signInWithRedirect(provider)
-            .then((result) => {
-            /** @type {firebase.auth.OAuthCredential} */
-            var credential = result.credential;
 
-            // This gives you a Google Access Token. You can use it to access the Google API.
-            var token = credential.accessToken;
-            // The signed-in user info.
-            var user = result.user;
-            console.log("credential:"+credential);
+        if(signedIn)
+        {
+            console.log("signing out");
+            firebase.auth().signOut().then(() => {
+               console.log("signed out!");
+               signInButton.innerHTML = "Sign In";
+              }).catch((error) => {
+                // An error happened.
+              });
+              signedIn = false;
+        }
+        else{
+            firebase.auth()
+                .signInWithRedirect(provider)
+                .then((result) => {
+                /** @type {firebase.auth.OAuthCredential} */
+                var credential = result.credential;
 
-            console.log("user:"+user.displayName);
-            // IdP data available in result.additionalUserInfo.profile.
-            // ...
-            }).catch((error) => {
-            // Handle Errors here.
-            var errorCode = error.code;
-            var errorMessage = error.message;
-            // The email of the user's account used.
-            var email = error.email;
-            // The firebase.auth.AuthCredential type that was used.
-            var credential = error.credential;
-            // ...
-        });
+                // This gives you a Google Access Token. You can use it to access the Google API.
+                var token = credential.accessToken;
+                // The signed-in user info.
+                var user = result.user;
+                console.log("credential:"+credential);
+
+                console.log("user:"+user.displayName);
+                signedIn = true;
+                // IdP data available in result.additionalUserInfo.profile.
+                // ...
+                }).catch((error) => {
+                // Handle Errors here.
+                var errorCode = error.code;
+                var errorMessage = error.message;
+                // The email of the user's account used.
+                var email = error.email;
+                // The firebase.auth.AuthCredential type that was used.
+                var credential = error.credential;
+                // ...
+            });
+        }
+        
 
     })
     //called when user state changes
     firebase.auth().onAuthStateChanged((user) => {
         if (user) {
+            signedIn = true;
             const displayName = user.displayName;
             const email = user.email;
             const photoURL = user.photoURL;
@@ -355,12 +378,14 @@
     var newRoute = [];
     
     startRouteButton.addEventListener("click", function(){
+        routeNameText.innerHTML = "";
+        routeAuthorText.innerHTML = "";
+        currRouteText.innerHTML = "";
         currRouteMade = true;        
         newRoute = [];
         displaySearchText.innerHTML = "Creating route...";
-        for (var i =0; i < allNodes.length; i++){
-            changeColour(allNodes[i].id, "#000000");
-        }
+        getImgCoord();
+        resetPage();
     })
 
     function selectNodes(xClick,yClick){
@@ -396,7 +421,7 @@
     }
 
     createRouteButton.addEventListener("click", function(){
-        if(newRoute.length > 0)
+        if(newRoute.length > 0 && routeName.value != "" && routeDiff.value != "")
         {
             var routesRef = database.collection("wall").doc("wall1").collection("routeNodes");
             var query = routesRef.where("name", "==", routeName.value);
@@ -423,6 +448,10 @@
                 }
             })
         }
+        else{
+            displaySearchText.innerHTML = "Please give the route a name and/or difficulty.";
+
+        }
     })
         
     
@@ -430,31 +459,108 @@
     searchButton.addEventListener('click', function() {
         routeNameText.innerHTML = "";
         routeAuthorText.innerHTML = "";
-
-        for (var i =0; i < allNodes.length; i++){
-            changeColour(allNodes[i].id, "#000000");
-        }
+        currRouteText.innerHTML = "";
+        
+       resetPage();
 
         var routesRef = database.collection("wall").doc("wall1").collection("routeNodes");
         var query = routesRef.where("name", "==", searchName.value);
         var nodes;
         query.get().then((querySnapshot) => {
-            querySnapshot.forEach((doc) => {
-                var route = doc.data();
-                nodes = route.routeNodes;
-                console.log("nodes:"+nodes.length);
-                
-                for(var i = 0; i < nodes.length; i++) {
-                    changeColour(nodes[i], "red");
-                } 
+            if (querySnapshot.empty){
+                routeNameText.innerHTML = searchName.value + " not found";
                 searchName.value = "";
-
-                routeNameText.innerHTML = "Route name: "+ route.name;
-                
-                routeAuthorText.innerHTML = "Created by: " + route.author;
                 getImgCoord(); 
+
+            }
+            else{
+                querySnapshot.forEach((doc) => {
+                    var route = doc.data();
+                    nodes = route.routeNodes;
+                    console.log("nodes:"+nodes.length);
+                    
+                    for(var i = 0; i < nodes.length; i++) {
+                        changeColour(nodes[i], "red");
+                    } 
+                    searchName.value = "";
+
+                    routeNameText.innerHTML = "Route name: "+ route.name;
+                    
+                    routeAuthorText.innerHTML = "Created by: " + route.author;
+                    getImgCoord(); 
             });
+            }
+            
+
         });  
+    })
+
+    var displayedRoutes;
+    var currIndexRoute;
+
+    searchDiffButton.addEventListener('click', function(){
+        currIndexRoute = 0;
+        displayedRoutes = [];
+        var routesRef = database.collection("wall").doc("wall1").collection("routeNodes");
+        var query = routesRef.where("difficulty", "==", searchRouteDiff.value);
+        query.get().then((querySnapshot) => {
+            if (querySnapshot.empty){
+                currRouteText.innerHTML = "There are no routes with "+ searchRouteDiff.value+ " difficulty.";
+                getImgCoord();
+                searchRouteDiff.value = "";
+                resetPage();
+            }
+            else{
+                querySnapshot.forEach((doc) => {
+                    var route = doc.data();
+                    displayedRoutes.push(route);
+                    displayDiffRoute(currIndexRoute);
+                });
+            }
+        });
+    })
+
+    nextDiffButton.addEventListener('click', function(){
+        if(currIndexRoute<displayedRoutes.length-1) currIndexRoute++;
+        displayDiffRoute(currIndexRoute); 
+    })
+
+    prevDiffButton.addEventListener('click', function(){
+        if(currIndexRoute>0) currIndexRoute--;
+        displayDiffRoute(currIndexRoute);
+    })
+
+    function displayDiffRoute (index) {
+       
+        resetPage();
+        currRouteText.innerHTML = (index+1) + "-" + displayedRoutes.length + " : " + displayedRoutes[index].name;
+        var nodes = displayedRoutes[index].routeNodes;
+        for(var i = 0; i < nodes.length; i++) {
+            changeColour(nodes[i], "red");
+        }
+            
+         
+        getImgCoord();
+        searchRouteDiff.value = "";
+    }
+
+    function resetPage(){
+        for (var i =0; i < allNodes.length; i++){
+            changeColour(allNodes[i].id, "#000000");
+        }
+    }
+
+    resetPageButton.addEventListener("click", function(){
+        resetPage();
+        routeName.value = "";
+        routeDiff.value = "";
+        displaySearchText.innerHTML = "Route not started...";
+        routeNameText.innerHTML = "";
+        routeAuthorText.innerHTML = "";
+        searchName.value = ""; 
+        searchRouteDiff.value = "";
+        currRouteText.innerHTML = "";
+        getImgCoord();
     })
 
 

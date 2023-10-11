@@ -11,7 +11,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="styles.css">
     <link rel="shortcut icon" href="#">
-    <title>Climbing Database</title>
+    <title>Boulder Builder</title>
 </head>
 <body>
 
@@ -28,14 +28,22 @@
     <button id="create-route-button"> Save route </button>
     <p id="word-box"> Route not started...</p>
     
-    <h3> Search for a route:</h3>
+    <h3> Search for a route by name:</h3>
     <input type="text" id="search-node-id" placeholder="name">
     <button id="search-button"> Search </button>
     
     <p id="route-name-text"></p>
     <p id="route-author"></p>
 
-   
+    <h3> Search for a route by difficulty:</h3>
+    <input type="text" id="search-route-diff" placeholder="difficulty">
+    <button id="search-diff-button"> Search </button>
+    <button id="next-route-button"> Next </button>
+    <button id="previous-route-button"> Previous </button>
+    <p id="curr-route-text"></p>
+
+    <button id="reset-button"> Reset Page</button>
+
 
     <br></br>
     <p id="x-val"></p>

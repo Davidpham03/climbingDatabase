@@ -6,3 +6,9 @@ object{
     position:absolute;
 }
 
+img{
+    position: absolute;
+    left: 600px;
+    top: 30px;
+}
+
